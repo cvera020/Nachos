@@ -24,6 +24,7 @@
 #include "copyright.h"
 #include "system.h"
 #include "syscall.h"
+#include "machine.h"
 
 //----------------------------------------------------------------------
 // ExceptionHandler
@@ -47,17 +48,37 @@
 //	"which" is the kind of exception.  The list of possible exceptions 
 //	are in machine.h.
 //----------------------------------------------------------------------
+extern Machine* machine;
 
 void
-ExceptionHandler(ExceptionType which)
-{
+ExceptionHandler(ExceptionType which) {
     int type = machine->ReadRegister(2);
 
-    if ((which == SyscallException) && (type == SC_Halt)) {
-	DEBUG('a', "Shutdown, initiated by user program.\n");
-   	interrupt->Halt();
+    if (which == SyscallException) {
+        if (type == SC_Yield || type == SC_Exit || type == SC_Join ||
+                type == SC_Exec || type == SC_Fork) {
+            machine->WriteRegister(PrevPCReg, machine->ReadRegister(PCReg));
+            machine->WriteRegister(PCReg, machine->ReadRegister(NextPCReg));
+            machine->WriteRegister(NextPCReg, machine->ReadRegister(NextPCReg) + 4); //Add 4 bytes since this is instruction length
+        }
+
+        if (type == SC_Halt) {
+            DEBUG('a', "Shutdown, initiated by user program.\n");
+            interrupt->Halt();
+        } else if (type == SC_Yield) {
+            DEBUG('a', "Yield(debug), initiated by user program.\n");
+            currentThread->Yield();
+        } else if (type == SC_Exit) {
+            
+        } else if (type == SC_Join) {
+
+        } else if (type == SC_Exec) {
+
+        } else if (type == SC_Fork) {
+
+        }
     } else {
-	printf("Unexpected user mode exception %d %d\n", which, type);
-	ASSERT(FALSE);
+        printf("Unexpected user mode exception %d %d\n", which, type);
+        ASSERT(FALSE);
     }
 }
