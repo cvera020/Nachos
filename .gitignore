@@ -1,1 +1,14 @@
 nbproject/
+userprog/bitmap.cc
+c++example/templatestack.h
+c++example/templatestack.cc
+c++example/stack.h
+c++example/stack.cc
+c++example/list.h
+c++example/list.cc
+c++example/inheritstack.h
+c++example/inheritstack.cc
+c++example/copyright.h
+c++example/c++.tex
+c++example/c++.ps
+c++example/Makefile
