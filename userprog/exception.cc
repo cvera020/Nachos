@@ -64,11 +64,15 @@ ExceptionHandler(ExceptionType which) {
 
         if (type == SC_Halt) {
             DEBUG('a', "Shutdown, initiated by user program.\n");
+            DEBUG('u', "System Call: %d invoked Halt\n", currentThread->getPid());
             interrupt->Halt();
         } else if (type == SC_Yield) {
-            DEBUG('a', "Yield(debug), initiated by user program.\n");
+            DEBUG('u', "System Call: %d invoked Yield\n", currentThread->getPid());
+            currentThread->setStatus(READY);
             currentThread->Yield();
         } else if (type == SC_Exit) {
+            int exitCode = machine->ReadRegister(4);
+            DEBUG('D', "Exit Code: %d\n", exitCode);
             
         } else if (type == SC_Join) {
 

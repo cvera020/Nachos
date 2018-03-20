@@ -55,6 +55,8 @@
 // WATCH OUT IF THIS ISN'T BIG ENOUGH!!!!!
 #define StackSize	(4 * 1024)	// in words
 
+// Set arbitrary upper limit for number of threads
+#define MAX_NUM_THREADS 200
 
 // Thread state
 enum ThreadStatus { JUST_CREATED, RUNNING, READY, BLOCKED };
@@ -79,8 +81,12 @@ class Thread {
     // THEY MUST be in this position for SWITCH to work.
     int* stackTop;			 // the current stack pointer
     int machineState[MachineStateSize];  // all registers except for stackTop
-
+    
   public:
+    static bool aliveThreads[]; //keep track of which thread ids are in use
+    static int threadCounter;
+    static int numExistingThreads;
+      
     Thread(char* debugName);		// initialize a Thread 
     ~Thread(); 				// deallocate a Thread
 					// NOTE -- thread being deleted
@@ -88,7 +94,7 @@ class Thread {
 					// is called
 
     // basic thread operations
-
+    int getPid();
     void Fork(VoidFunctionPtr func, int arg); 	// Make thread run (*func)(arg)
     void Yield();  				// Relinquish the CPU if any 
 						// other thread is runnable
@@ -111,6 +117,9 @@ class Thread {
     ThreadStatus status;		// ready, running or blocked
     char* name;
 
+    int pid;    //tread id
+    int ppid;   //parent thread id
+    
     void StackAllocate(VoidFunctionPtr func, int arg);
     					// Allocate a stack for thread.
 					// Used internally by Fork()
