@@ -100,6 +100,47 @@ Thread::getPid() {
 }
 
 //----------------------------------------------------------------------
+// Thread::getNumChildren
+// 	Returns the number of child threads the current thread has
+//----------------------------------------------------------------------
+
+int
+Thread::getNumChildren() {
+    return numChildren;
+}
+
+//----------------------------------------------------------------------
+// Thread::getParent
+// 	Returns a pointer to the parent thread of the current thread
+//----------------------------------------------------------------------
+
+Thread*
+Thread::getParent() {
+    return parentThread;
+}
+
+//----------------------------------------------------------------------
+// Thread::getChildren
+// 	Returns an array of pointers (please treat it as such) to 
+//      children threads of this thread
+//----------------------------------------------------------------------
+
+Thread** 
+Thread::getChildren() {
+    return childrenThreads;
+}
+
+//----------------------------------------------------------------------
+// Thread::getStatus
+// 	Returns the ThreadStatus (status) of the current thread
+//----------------------------------------------------------------------
+
+ThreadStatus 
+Thread::getStatus() {
+    return status;
+}
+
+//----------------------------------------------------------------------
 // Thread::Fork
 // 	Invoke (*func)(arg), allowing caller and callee to execute 
 //	concurrently.

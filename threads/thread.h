@@ -94,7 +94,12 @@ class Thread {
 					// is called
 
     // basic thread operations
-    int getPid();
+    int getPid();                               // Get thread id
+    int getNumChildren();                       // Get number of child threads
+    Thread* getParent();                        // Return pointer to parent thread
+    Thread** getChildren();                     // Return array of pointers to children
+                                                // threds. Use with getNumChildren()
+    ThreadStatus getStatus();                   // Get status of current thread
     void Fork(VoidFunctionPtr func, int arg); 	// Make thread run (*func)(arg)
     void Yield();  				// Relinquish the CPU if any 
 						// other thread is runnable
@@ -116,9 +121,12 @@ class Thread {
 					// (If NULL, don't deallocate stack)
     ThreadStatus status;		// ready, running or blocked
     char* name;
-
-    int pid;    //tread id
-    int ppid;   //parent thread id
+    int pid;                            //thread id
+    
+    Thread* parentThread;               //parent thread id
+    Thread** childrenThreads;           //childrens' threads' ids   
+    int numChildren;                    //number of children. Used to keep track
+                                        //of number of elements in childrenThreads
     
     void StackAllocate(VoidFunctionPtr func, int arg);
     					// Allocate a stack for thread.

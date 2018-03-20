@@ -25,6 +25,7 @@
 #include "system.h"
 #include "syscall.h"
 #include "machine.h"
+#include "thread.h"
 
 //----------------------------------------------------------------------
 // ExceptionHandler
@@ -67,7 +68,7 @@ ExceptionHandler(ExceptionType which) {
             DEBUG('u', "System Call: %d invoked Halt\n", currentThread->getPid());
             interrupt->Halt();
         } else if (type == SC_Yield) {
-            DEBUG('u', "System Call: %d invoked Yield\n", currentThread->getPid());
+            DEBUG('D', "System Call: %d invoked Yield\n", currentThread->getPid());
             currentThread->setStatus(READY);
             currentThread->Yield();
         } else if (type == SC_Exit) {
