@@ -86,7 +86,7 @@ class Thread {
     static bool aliveThreads[]; //keep track of which thread ids are in use
     static int threadCounter;
     static int numExistingThreads;
-      
+    
     Thread(char* debugName);		// initialize a Thread 
     ~Thread(); 				// deallocate a Thread
 					// NOTE -- thread being deleted
@@ -99,6 +99,8 @@ class Thread {
     Thread* getParent();                        // Return pointer to parent thread
     Thread** getChildren();                     // Return array of pointers to children
                                                 // threds. Use with getNumChildren()
+    bool addChild(Thread* child);               // Returns true if child thread was
+                                                // successfully created
     ThreadStatus getStatus();                   // Get status of current thread
     void Fork(VoidFunctionPtr func, int arg); 	// Make thread run (*func)(arg)
     void Yield();  				// Relinquish the CPU if any 

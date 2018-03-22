@@ -24,6 +24,10 @@
 #include <strings.h>
 #endif
 
+bool AddrSpace::isPhysicalPageInUse[NumPhysPages];   //keep track of which physical pages are currently in use
+int AddrSpace::totalPhysicalPagesUsed;
+MemoryManager AddrSpace::memMan[MaxVirtPages];
+
 //----------------------------------------------------------------------
 // SwapHeader
 // 	Do little endian to big endian conversion on the bytes in the 
@@ -31,7 +35,7 @@
 //	endian machine, and we're now running on a big endian machine.
 //----------------------------------------------------------------------
 
-static void 
+void 
 SwapHeader (NoffHeader *noffH)
 {
 	noffH->noffMagic = WordToHost(noffH->noffMagic);
@@ -44,6 +48,94 @@ SwapHeader (NoffHeader *noffH)
 	noffH->uninitData.size = WordToHost(noffH->uninitData.size);
 	noffH->uninitData.virtualAddr = WordToHost(noffH->uninitData.virtualAddr);
 	noffH->uninitData.inFileAddr = WordToHost(noffH->uninitData.inFileAddr);
+}
+
+//----------------------------------------------------------------------
+// AllocatePhysicalPage
+//      Return a translation entry. Saves the information
+//      about the translation mapping in a memory manager
+//
+//  amountReq   - number of pages to be mapped
+//  pid         - pid of process to which the mapping will be associated to in
+//              the memory manager
+//----------------------------------------------------------------------
+
+TranslationEntry*
+AddrSpace::AllocatePhysicalPages(int amountReq, int pid) {
+    //check if there are enough unused physical pages
+    ASSERT(totalPhysicalPagesUsed + amountReq > NumPhysPages);
+    
+    //currently only support 1-1 mapping from pages to frames
+    ASSERT (MaxVirtPages != NumPhysPages);
+    
+    TranslationEntry* en = new TranslationEntry[amountReq];
+    
+    //create virtual to physical page mappings
+    int virtPageIndex = 0;
+    for (int i=0; i < NumPhysPages; i++) {
+        if (!isPhysicalPageInUse[i]) {
+            isPhysicalPageInUse[i] = true;
+            en[virtPageIndex].virtualPage = virtPageIndex;
+            en[virtPageIndex].physicalPage = i;
+            en[virtPageIndex].valid = TRUE;
+            en[virtPageIndex].use = FALSE;
+            en[virtPageIndex].dirty = FALSE;
+            en[virtPageIndex].readOnly = FALSE;
+            virtPageIndex++;
+            if (virtPageIndex == amountReq) {
+                break;
+            }
+        }
+    }
+    
+    //add mapping to memory manager array
+    for (int i=0; i < MaxVirtPages; i++) {
+        if (memMan[i] == NULL) {
+            memMan[i] = new MemoryManager();
+            memMan[i].entries = en;
+            memMan[i].pid = pid;
+            memMan[i].numPagesMapped = amountReq;
+        }
+    }
+    
+    totalPhysicalPagesUsed += amountReq;
+    return en;
+}
+
+//----------------------------------------------------------------------
+// DeallocatePhysicalPage
+//      Deallocates physical memory associated with a process.
+//----------------------------------------------------------------------
+
+bool
+AddrSpace::DeallocatePhysicalPages(TranslationEntry* en, int pid) {
+    for (int i=0; i < MaxVirtPages; i++) {
+        if (memMan[i] != NULL && memMan[i].entries == en && 
+                memMan[i].pid == pid) {
+            totalPhysicalPagesUsed -= memMan[i].numPagesMapped;
+            delete [] memMan[i]->entries;
+            memMan[i]->entries = NULL;
+            delete memMan[i];
+            memMan[i] = NULL;
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+//----------------------------------------------------------------------
+// InitMemoryManager
+//      Return a physical page to map a virtual page. If there are no
+//      free physical pages, return -1
+//----------------------------------------------------------------------
+
+void
+AddrSpace::InitMemoryManager() {
+    for (int i=0; i < MaxVirtPages; i++) {
+        isPhysicalPageInUse[i] = false;
+    }
+    totalPhysicalPagesUsed = 0;
 }
 
 //----------------------------------------------------------------------
@@ -79,25 +171,11 @@ AddrSpace::AddrSpace(OpenFile *executable)
     numPages = divRoundUp(size, PageSize);
     size = numPages * PageSize;
 
-    ASSERT(numPages <= NumPhysPages);		// check we're not trying
-						// to run anything too big --
-						// at least until we have
-						// virtual memory
-
     DEBUG('a', "Initializing address space, num pages %d, size %d\n", 
 					numPages, size);
+    
 // first, set up the translation 
-    pageTable = new TranslationEntry[numPages];
-    for (i = 0; i < numPages; i++) {
-	pageTable[i].virtualPage = i;	// for now, virtual page # = phys page #
-	pageTable[i].physicalPage = i;
-	pageTable[i].valid = TRUE;
-	pageTable[i].use = FALSE;
-	pageTable[i].dirty = FALSE;
-	pageTable[i].readOnly = FALSE;  // if the code segment was entirely on 
-					// a separate page, we could set its 
-					// pages to be read-only
-    }
+    pageTable = AllocatePhysicalPages(numPages, pageTable);
     
 // zero out the entire address space, to zero the unitialized data segment 
 // and the stack segment
