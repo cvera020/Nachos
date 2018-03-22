@@ -26,7 +26,7 @@
 
 bool AddrSpace::isPhysicalPageInUse[NumPhysPages];   //keep track of which physical pages are currently in use
 int AddrSpace::totalPhysicalPagesUsed;
-MemoryManager AddrSpace::memMan[MaxVirtPages];
+MemoryManager* AddrSpace::memMan[MaxVirtPages];
 
 //----------------------------------------------------------------------
 // SwapHeader
@@ -90,11 +90,11 @@ AddrSpace::AllocatePhysicalPages(int amountReq, int pid) {
     
     //add mapping to memory manager array
     for (int i=0; i < MaxVirtPages; i++) {
-        if (memMan[i] == NULL) {
+        if (&(memMan[i]) == NULL) {
             memMan[i] = new MemoryManager();
-            memMan[i].entries = en;
-            memMan[i].pid = pid;
-            memMan[i].numPagesMapped = amountReq;
+            memMan[i]->entries = en;
+            memMan[i]->pid = pid;
+            memMan[i]->numPagesMapped = amountReq;
         }
     }
     
@@ -110,13 +110,12 @@ AddrSpace::AllocatePhysicalPages(int amountReq, int pid) {
 bool
 AddrSpace::DeallocatePhysicalPages(TranslationEntry* en, int pid) {
     for (int i=0; i < MaxVirtPages; i++) {
-        if (memMan[i] != NULL && memMan[i].entries == en && 
-                memMan[i].pid == pid) {
-            totalPhysicalPagesUsed -= memMan[i].numPagesMapped;
-            delete [] memMan[i]->entries;
+        if (memMan[i] != NULL && memMan[i]->entries == en && 
+                memMan[i]->pid == pid) {
+            totalPhysicalPagesUsed -= memMan[i]->numPagesMapped;
             memMan[i]->entries = NULL;
+            delete [] memMan[i]->entries;
             delete memMan[i];
-            memMan[i] = NULL;
             return true;
         }
     }
@@ -175,8 +174,7 @@ AddrSpace::AddrSpace(OpenFile *executable)
 					numPages, size);
     
 // first, set up the translation 
-    pageTable = AllocatePhysicalPages(numPages, pageTable);
-    
+    pageTable = AllocatePhysicalPages(numPages, currentThread->getPid());
 // zero out the entire address space, to zero the unitialized data segment 
 // and the stack segment
     bzero(machine->mainMemory, size);

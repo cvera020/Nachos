@@ -50,7 +50,7 @@ class AddrSpace {
     static bool DeallocatePhysicalPages(TranslationEntry*, int);    //deallocates physical pages associated
                                                  //with a process
     
-    static MemoryManager memMan[MaxVirtPages]; //array of MemoryManagers; each element 
+    static MemoryManager* memMan[MaxVirtPages]; //array of MemoryManagers; each element 
                                                 //represents page mappings for a thread
     static bool isPhysicalPageInUse[NumPhysPages];   //keep track of which physical pages are currently in use
     static int totalPhysicalPagesUsed;      //keeps track of the amount of currently mapped

@@ -54,7 +54,7 @@ extern Machine* machine;
 void
 ExceptionHandler(ExceptionType which) {
     int type = machine->ReadRegister(2);
-    machine->WriteMem();
+    
     if (which == SyscallException) {
         if (type == SC_Yield || type == SC_Exit || type == SC_Join ||
                 type == SC_Exec || type == SC_Fork) {
