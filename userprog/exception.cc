@@ -107,22 +107,30 @@ ExceptionHandler(ExceptionType which) {
 
             // Finish the current thread
             currentThread->Finish();
-<<<<<<< HEAD
 
-=======
-            
->>>>>>> 8e0d8869e96dc805e1dc7bd4a38345f01e6a1e8d
         } else if (type == SC_Join) {
             int childPid = machine->ReadRegister(4);
             int exitCode = 0;
 
             Thread* child = currentThread->getChild(childPid);
 
+            // If the child wasnt under this parent process, return an error
+            if (child == NULL) {
+                exitCode = -1;
+            } else { // Else, keep on checking if the requested process is finished. if not, yield the
+                while (child->getStatus()) {
+
+                }
+            }
+
+            machine->WriteRegister(2, exitCode);
+
         } else if (type == SC_Exec) {
 
         } else if (type == SC_Fork) {
 
         }
+
     } else {
         printf("Unexpected user mode exception %d %d\n", which, type);
         ASSERT(FALSE);
