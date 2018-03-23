@@ -127,6 +127,29 @@ List::Remove()
     return SortedRemove(NULL);  // Same as SortedRemove, but ignore the key
 }
 
+void *
+List::RemoveItem(void* item)
+{
+    ListElement *parentElement = first;
+    ListElement *element = first->next;
+
+    if (IsEmpty())
+        return NULL;
+    if (item == parentElement->item)
+        return Remove();
+
+    while (element != nullptr) {
+        if (element->item == item) {
+            parentElement->next = element->next;
+            delete element;
+            return item;
+        }
+        parentElement = element;
+        element = element->next;
+    }
+    return NULL;
+}
+
 //----------------------------------------------------------------------
 // List::Mapcar
 //	Apply a function to each item on the list, by walking through  
