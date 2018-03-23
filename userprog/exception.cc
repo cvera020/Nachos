@@ -27,6 +27,7 @@
 #include "syscall.h"
 #include "machine.h"
 #include "thread.h"
+#include "addrspace.h"
 
 
 //----------------------------------------------------------------------
@@ -52,6 +53,7 @@
 //	are in machine.h.
 //----------------------------------------------------------------------
 extern Machine* machine;
+extern AddrSpace* addrSpace;
 
 void
 ExceptionHandler(ExceptionType which) {
@@ -101,12 +103,20 @@ ExceptionHandler(ExceptionType which) {
             }
 
             // Deallocate the process memory and remove from the page table
-
+            addrSpace->DeallocatePhysicalPages(currentThread->getPid());
 
             // Finish the current thread
             currentThread->Finish();
+<<<<<<< HEAD
+
+=======
             
+>>>>>>> 8e0d8869e96dc805e1dc7bd4a38345f01e6a1e8d
         } else if (type == SC_Join) {
+            int childPid = machine->ReadRegister(4);
+            int exitCode = 0;
+
+            Thread* child = currentThread->getChild(childPid);
 
         } else if (type == SC_Exec) {
 

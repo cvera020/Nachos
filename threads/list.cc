@@ -127,6 +127,13 @@ List::Remove()
     return SortedRemove(NULL);  // Same as SortedRemove, but ignore the key
 }
 
+//----------------------------------------------------------------------
+// List::Remove
+//      Remove the specified item from the list.
+//
+// Returns:
+//	Pointer to removed item, NULL if not found on the list.
+//----------------------------------------------------------------------
 void *
 List::RemoveItem(void* item)
 {
@@ -138,13 +145,37 @@ List::RemoveItem(void* item)
     if (item == parentElement->item)
         return Remove();
 
-    while (element != nullptr) {
+    while (element != NULL) {
         if (element->item == item) {
             parentElement->next = element->next;
             delete element;
             return item;
         }
         parentElement = element;
+        element = element->next;
+    }
+    return NULL;
+}
+
+//----------------------------------------------------------------------
+// List::Get
+//      Gets the "item" at the specified.
+//
+// Returns:
+//	Pointer to item at index, NULL if nothing was there.
+//----------------------------------------------------------------------
+
+void *
+List::Get(int index)
+{
+    int i = 0;
+    ListElement *element = first;
+    for (i = 0; i <= index; i++) {
+        if (element->item == NULL) {
+            return NULL;
+        } else if (i == index) {
+            return element->item;
+        }
         element = element->next;
     }
     return NULL;

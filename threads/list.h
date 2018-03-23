@@ -49,6 +49,7 @@ class List {
     void Append(void *item); 	// Put item at the end of the list
     void *Remove(); 	 	    // Take item off the front of the list
     void *RemoveItem(void* item); 	 	// Take item off the front of the list
+    void *Get(int index);       // Gets the item at a particular index
 
     void Mapcar(VoidFunctionPtr func);	// Apply "func" to every element 
 					                    // on the list
