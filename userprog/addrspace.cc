@@ -145,11 +145,10 @@ AddrSpace::AllocatePhysicalPages(TranslationEntry* en, int amountReq, int numCod
 //----------------------------------------------------------------------
 
 bool
-AddrSpace::DeallocatePhysicalPages(TranslationEntry* en, int pid) {
-    DEBUG('D', "Deallocate all physical pages!\n");
+AddrSpace::DeallocatePhysicalPages(int pid) {
+    DEBUG('D', "Deallocate all physical pages associated with pid %d!\n", pid);
     for (int i=0; i < NumPhysPages; i++) {
-        if (memMan[i] != NULL && memMan[i]->entries == en && 
-                memMan[i]->pid == pid) {
+        if (memMan[i] != NULL && memMan[i]->pid == pid) {
             isPhysicalPageInUse[i] = false;
             totalPhysicalPagesUsed -= memMan[i]->numPagesMapped;
             memMan[i]->entries = NULL;
@@ -158,7 +157,6 @@ AddrSpace::DeallocatePhysicalPages(TranslationEntry* en, int pid) {
             return true;
         }
     }
-    delete [] memMan;
     return false;
 }
 
@@ -243,7 +241,7 @@ AddrSpace::AddrSpace(OpenFile *executable)
 AddrSpace::~AddrSpace()
 {
     DEBUG('D', "Deallocating all pages\n");
-    DeallocatePhysicalPages(pageTable, currentThread->getPid());
+    DeallocatePhysicalPages(currentThread->getPid());
 }
 
 //----------------------------------------------------------------------
