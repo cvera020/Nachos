@@ -42,15 +42,16 @@ class ListElement {
 
 class List {
   public:
-    List();			// initialize the list
+    List();			    // initialize the list
     ~List();			// de-allocate the list
 
     void Prepend(void *item); 	// Put item at the beginning of the list
     void Append(void *item); 	// Put item at the end of the list
-    void *Remove(); 	 	// Take item off the front of the list
+    void *Remove(); 	 	    // Take item off the front of the list
+    void *RemoveItem(void* item); 	 	// Take item off the front of the list
 
     void Mapcar(VoidFunctionPtr func);	// Apply "func" to every element 
-					// on the list
+					                    // on the list
     bool IsEmpty();		// is the list empty? 
     
 

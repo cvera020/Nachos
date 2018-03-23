@@ -98,7 +98,8 @@ class Thread {
     int getPid();                               // Get thread id
     int getNumChildren();                       // Get number of child threads
     Thread* getParent();                        // Return pointer to parent thread
-    List* getChildren();                     // Return array of pointers to children
+    void removeParent();                        // Sets the parent thread to null
+    List* getChildren();                        // Return array of pointers to children
                                                 // threds. Use with getNumChildren()
     bool addChild(Thread* child);               // Returns true if child thread was
                                                 // successfully created

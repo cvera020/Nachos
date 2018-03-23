@@ -21,12 +21,14 @@
 // All rights reserved.  See copyright.h for copyright notice and limitation 
 // of liability and disclaimer of warranty provisions.
 
+#include <cstdio>
 #include "copyright.h"
 #include "system.h"
 #include "syscall.h"
 #include "machine.h"
 #include "thread.h"
- 
+
+
 //----------------------------------------------------------------------
 // ExceptionHandler
 // 	Entry point into the Nachos kernel.  Called when a user program
@@ -73,8 +75,37 @@ ExceptionHandler(ExceptionType which) {
             currentThread->Yield();
         } else if (type == SC_Exit) {
             int exitCode = machine->ReadRegister(4);
-            DEBUG('D', "Exit Code: %d\n", exitCode);
-            
+            DEBUG('D', "Exit Code: %d invoked Exit with code %d\n", currentThread->getPid(), exitCode);
+
+            // Set children's parent pointers to null
+            List* children = currentThread->getChildren();
+            Thread* child;
+            while (children->IsEmpty()) {
+                child = (Thread*) children->Remove();
+                DEBUG('D', "Exit Code: %d now does not have a parent\n", child->getPid());
+                child->removeParent();
+            }
+
+            // Remove itself from parent thread, if one exists, and set parent's status to child's
+            Thread* parent = currentThread->getParent();
+            if (parent != NULL) {
+                parent->setStatus(currentThread->getStatus());
+                if (!parent->getChildren()->RemoveItem(currentThread)) {
+                    DEBUG('D', "Error with RemoveItem() call");
+                }
+                DEBUG('D', "Exit Code: %d has now been removed from its parent %d\n",
+                      currentThread->getPid(), parent->getPid());
+            } else {
+                DEBUG('D', "Exit Code: %d has no parent thread associated\n", currentThread->getPid());
+            }
+
+            // Deallocate the process memory and remove from the page table
+
+
+            // Finish the current thread
+            currentThread->Finish();
+
+
         } else if (type == SC_Join) {
 
         } else if (type == SC_Exec) {
