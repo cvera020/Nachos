@@ -158,6 +158,23 @@ Thread::addChild(Thread *child) {
 }
 
 //----------------------------------------------------------------------
+// Thread::getChild
+// 	Gets the pointer to a child thread with the specified pid on the
+//  list, returning NULL if none was found.
+//----------------------------------------------------------------------
+
+Thread*
+Thread::getChild(int pid) {
+    int i = 0;
+    Thread* child;
+    while ((child = (Thread*) childrenThreads->Get(i)) != NULL) {
+        if (child->getPid() == pid)
+            return child;
+    }
+    return NULL;
+}
+
+//----------------------------------------------------------------------
 // Thread::getStatus
 // 	Returns the ThreadStatus (status) of the current thread
 //----------------------------------------------------------------------

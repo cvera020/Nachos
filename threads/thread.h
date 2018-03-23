@@ -103,6 +103,9 @@ class Thread {
                                                 // threds. Use with getNumChildren()
     bool addChild(Thread* child);               // Returns true if child thread was
                                                 // successfully created
+    Thread* getChild(int pid);                  // Returns the child with the specified pid,
+                                                // and NULL if not found
+
     ThreadStatus getStatus();                   // Get status of current thread
     void Fork(VoidFunctionPtr func, int arg); 	// Make thread run (*func)(arg)
     void Yield();  				// Relinquish the CPU if any 
