@@ -47,7 +47,7 @@ class AddrSpace {
     static void AllocatePhysicalPages(TranslationEntry*, int, int, int, int, int);  //allocates physical pages associated
                                                   //with a process
     
-    static bool DeallocatePhysicalPages(TranslationEntry*, int);    //deallocates physical pages associated
+    static bool DeallocatePhysicalPages(int);    //deallocates physical pages associated
                                                  //with a process
     
     static MemoryManager* memMan[MaxVirtPages]; //array of MemoryManagers; each element 
