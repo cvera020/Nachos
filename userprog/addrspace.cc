@@ -119,7 +119,7 @@ AddrSpace::AllocatePhysicalPages(TranslationEntry* en, int amountReq, int numCod
     //add mapping to memory manager array
     int memManPageAllocated = -1;
     for (int i=0; i < MaxVirtPages; i++) {
-        if (&(memMan[i]) == NULL) {
+        if (memMan[i] == NULL) {
             memManPageAllocated = i;
             memMan[i] = new MemoryManager();
             memMan[i]->entries = en;
@@ -131,6 +131,7 @@ AddrSpace::AllocatePhysicalPages(TranslationEntry* en, int amountReq, int numCod
             
             DEBUG('R', "Loaded Program: %d code | %d data | %d bss\n", 
                     numCodePages, numDataPages, numBssPages);
+            break;
         }
     }
     ASSERT(memManPageAllocated != -1);
