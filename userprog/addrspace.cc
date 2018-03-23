@@ -135,7 +135,7 @@ AddrSpace::AllocatePhysicalPages(TranslationEntry* en, int amountReq, int pid) {
 
 bool
 AddrSpace::DeallocatePhysicalPages(TranslationEntry* en, int pid) {
-    DEBUG('D', "Deallocating physical pages!\n");
+    DEBUG('D', "Deallocate all physical pages!\n");
     for (int i=0; i < NumPhysPages; i++) {
         if (memMan[i] != NULL && memMan[i]->entries == en && 
                 memMan[i]->pid == pid) {
@@ -147,7 +147,7 @@ AddrSpace::DeallocatePhysicalPages(TranslationEntry* en, int pid) {
             return true;
         }
     }
-    
+    delete [] memMan;
     return false;
 }
 
@@ -204,7 +204,7 @@ AddrSpace::AddrSpace(OpenFile *executable)
 // first, set up the translation; physical pages will be initially zeroed out
     pageTable = new TranslationEntry[numPages];
     AllocatePhysicalPages(pageTable, numPages, currentThread->getPid());
-
+    
 // then, copy in the code and data segments into memory
     int physicalAddress;
     if (noffH.code.size > 0) {
@@ -231,6 +231,7 @@ AddrSpace::AddrSpace(OpenFile *executable)
 
 AddrSpace::~AddrSpace()
 {
+    DEBUG('D', "Deallocating all pages\n");
     DeallocatePhysicalPages(pageTable, currentThread->getPid());
 }
 
