@@ -125,9 +125,25 @@ Thread::getParent() {
 //      children threads of this thread
 //----------------------------------------------------------------------
 
-Thread** 
+List*
 Thread::getChildren() {
     return childrenThreads;
+}
+
+//----------------------------------------------------------------------
+// Thread::addChild
+// 	Adds the pointer to a child thread to the list.
+//----------------------------------------------------------------------
+
+bool
+Thread::addChild(Thread *child) {
+    if (child != NULL) {
+        childrenThreads->Append(child);
+        child->parentThread = this;
+        numChildren++;
+        return true;
+    }
+    return false;
 }
 
 //----------------------------------------------------------------------
