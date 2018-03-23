@@ -44,7 +44,7 @@ class AddrSpace {
   public:
     static void InitMemoryManager();
     
-    static TranslationEntry* AllocatePhysicalPages(int, int);  //allocates physical pages associated
+    static void AllocatePhysicalPages(TranslationEntry*, int, int, int, int, int);  //allocates physical pages associated
                                                   //with a process
     
     static bool DeallocatePhysicalPages(TranslationEntry*, int);    //deallocates physical pages associated

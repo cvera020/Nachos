@@ -69,22 +69,23 @@ ExceptionHandler(ExceptionType which) {
 
         if (type == SC_Halt) {
             DEBUG('a', "Shutdown, initiated by user program.\n");
-            DEBUG('u', "System Call: %d invoked Halt\n", currentThread->getPid());
+            DEBUG('R', "System Call: [%d] invoked Halt\n", currentThread->getPid());
             interrupt->Halt();
         } else if (type == SC_Yield) {
-            DEBUG('D', "System Call: %d invoked Yield\n", currentThread->getPid());
+            DEBUG('R', "System Call: [%d] invoked Yield\n", currentThread->getPid());
             currentThread->setStatus(READY);
             currentThread->Yield();
         } else if (type == SC_Exit) {
+            
             int exitCode = machine->ReadRegister(4);
-            DEBUG('D', "Exit Code: %d invoked Exit with code %d\n", currentThread->getPid(), exitCode);
+            DEBUG('R', "System Call: [%d] invoked Exit with Exit Code &d\n", currentThread->getPid(), exitCode);
 
             // Set children's parent pointers to null
             List* children = currentThread->getChildren();
             Thread* child;
             while (children->IsEmpty()) {
                 child = (Thread*) children->Remove();
-                DEBUG('D', "Exit Code: %d now does not have a parent\n", child->getPid());
+                DEBUG('R', "Exit Code: %d now does not have a parent\n", child->getPid());
                 child->removeParent();
             }
 
@@ -93,12 +94,12 @@ ExceptionHandler(ExceptionType which) {
             if (parent != NULL) {
                 parent->setStatus(currentThread->getStatus());
                 if (!parent->getChildren()->RemoveItem(currentThread)) {
-                    DEBUG('D', "Error with RemoveItem() call");
+                    DEBUG('R', "Error with RemoveItem() call");
                 }
-                DEBUG('D', "Exit Code: %d has now been removed from its parent %d\n",
+                DEBUG('R', "Exit Code: %d has now been removed from its parent %d\n",
                       currentThread->getPid(), parent->getPid());
             } else {
-                DEBUG('D', "Exit Code: %d has no parent thread associated\n", currentThread->getPid());
+                DEBUG('R', "Exit Code: %d has no parent thread associated\n", currentThread->getPid());
             }
 
             // Deallocate the process memory and remove from the page table
@@ -106,7 +107,11 @@ ExceptionHandler(ExceptionType which) {
 
             // Finish the current thread
             currentThread->Finish();
+<<<<<<< HEAD
 
+=======
+            
+>>>>>>> 8e0d8869e96dc805e1dc7bd4a38345f01e6a1e8d
         } else if (type == SC_Join) {
             int childPid = machine->ReadRegister(4);
             int exitCode = 0;
