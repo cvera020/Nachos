@@ -129,7 +129,7 @@ AddrSpace::AllocatePhysicalPages(TranslationEntry* en, int amountReq, int numCod
             memMan[i]->numDataPages = numDataPages;
             memMan[i]->numBssPages = numBssPages;
             
-            DEBUG('R', "Loaded Program: %d code | %d data | %d bss\n", 
+            DEBUG('R', "Loaded Program: [%d] code | [%d] data | [%d] bss\n", 
                     numCodePages, numDataPages, numBssPages);
             break;
         }
@@ -216,6 +216,8 @@ AddrSpace::AddrSpace(OpenFile *executable)
     
 // then, copy in the code and data segments into memory
     int physicalAddress;
+    DEBUG('R', "Loaded Program: [%d] code | [%d] data | [%d] bss\n", 
+                    noffH.code.size, noffH.initData.size, numBssPages);
     if (noffH.code.size > 0) {
         DEBUG('D', "Initializing code segment, at 0x%x, size %d\n", 
 			noffH.code.virtualAddr, noffH.code.size);
@@ -300,3 +302,4 @@ void AddrSpace::RestoreState()
     machine->pageTable = pageTable;
     machine->pageTableSize = numPages;
 }
+

@@ -46,6 +46,7 @@
 #include "addrspace.h"
 #endif
 
+
 // CPU register state to be saved on context switch.  
 // The SPARC and MIPS only need 10 registers, but the Snake needs 18.
 // For simplicity, this is just the max over all architectures.
@@ -87,6 +88,7 @@ class Thread {
     static bool aliveThreads[]; //keep track of which thread ids are in use
     static int threadCounter;
     static int numExistingThreads;
+    static Thread* threadMap[];
     
     Thread(char* debugName);		// initialize a Thread 
     ~Thread(); 				// deallocate a Thread
@@ -105,8 +107,11 @@ class Thread {
                                                 // successfully created
     Thread* getChild(int pid);                  // Returns the child with the specified pid,
                                                 // and NULL if not found
-
+    Thread* getThread(int pid);                 // Gets the thread with the specified pid
     ThreadStatus getStatus();                   // Get status of current thread
+
+    void printThread();                         // Prints information about the current thread
+
     void Fork(VoidFunctionPtr func, int arg); 	// Make thread run (*func)(arg)
     void Yield();  				// Relinquish the CPU if any 
 						// other thread is runnable
@@ -149,6 +154,7 @@ class Thread {
   public:
     void SaveUserState();		// save user-level register state
     void RestoreUserState();		// restore user-level register state
+    void SetUserRegisterState(int id, int value); // sets a user-level register's state
 
     AddrSpace *space;			// User code this thread is running.
 #endif

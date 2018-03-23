@@ -19,6 +19,7 @@
 #include "switch.h"
 #include "synch.h"
 #include "system.h"
+#include "list.h"
 
 #define STACK_FENCEPOST 0xdeadbeef	// this is put at the top of the
 					// execution stack, for detecting 
@@ -33,6 +34,7 @@
 //----------------------------------------------------------------------
 
 bool Thread::aliveThreads[MAX_NUM_THREADS] = {false};
+Thread* Thread::threadMap[MAX_NUM_THREADS];
 int Thread::threadCounter;
 int Thread::numExistingThreads;
 
@@ -52,6 +54,12 @@ Thread::Thread(char* threadName)
             pid = threadCounter;
             threadCounter = (threadCounter+1) % MAX_NUM_THREADS;
             aliveThreads[pid] = true;
+            threadMap[pid] = this;
+
+            #ifdef USER_PROGRAM
+ //           space = NULL;
+            #endif
+
             break;
         } else {
             threadCounter = (threadCounter+1) % MAX_NUM_THREADS;
@@ -126,7 +134,11 @@ Thread::getParent() {
 
 void
 Thread::removeParent() {
-    parentThread = NULL;
+    if (parentThread != NULL) {
+        parentThread->numChildren--;
+        parentThread = NULL;
+    }
+
 }
 
 //----------------------------------------------------------------------
@@ -175,13 +187,35 @@ Thread::getChild(int pid) {
 }
 
 //----------------------------------------------------------------------
+// Thread::getThread
+// 	Gets the pointer a thread with the specified pid on the main thread
+//  list, returning NULL if none was found.
+//----------------------------------------------------------------------
+
+Thread*
+Thread::getThread(int pid) {
+    return threadMap[pid];
+}
+
+//----------------------------------------------------------------------
 // Thread::getStatus
 // 	Returns the ThreadStatus (status) of the current thread
 //----------------------------------------------------------------------
 
-ThreadStatus 
+ThreadStatus
 Thread::getStatus() {
     return status;
+}
+
+//----------------------------------------------------------------------
+// Thread::printThread
+// 	Prints the information of the current thread
+//----------------------------------------------------------------------
+
+void
+Thread::printThread() {
+    printf("%6s | %15s | %6s | %6s", "PID", "Name", "Status", "Alive?");
+    printf("%6d | %15s | %6d | %6d", getPid(), getName(), getStatus(), aliveThreads[getPid()]);
 }
 
 //----------------------------------------------------------------------
@@ -267,7 +301,9 @@ Thread::Finish ()
     ASSERT(this == currentThread);
     
     DEBUG('t', "Finishing thread \"%s\"\n", getName());
-    
+
+    status = ZOMBIE;
+
     threadToBeDestroyed = currentThread;
     Sleep();					// invokes SWITCH
     // not reached
@@ -437,4 +473,20 @@ Thread::RestoreUserState()
     for (int i = 0; i < NumTotalRegs; i++)
 	machine->WriteRegister(i, userRegisters[i]);
 }
+
+//----------------------------------------------------------------------
+// Thread::SetUserRegisterState
+//	Sets a user-level register's state.
+//
+//	"id" is the user-level register's name.
+//	"value" is the value to set in the register.
+//----------------------------------------------------------------------
+
+void
+Thread::SetUserRegisterState(int id, int value)
+{
+	if (id >= 0 && id < NumTotalRegs)
+		userRegisters[id] = value;
+}
+
 #endif
