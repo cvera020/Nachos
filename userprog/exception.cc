@@ -107,21 +107,32 @@ ExceptionHandler(ExceptionType which) {
             // Deallocate the process memory and remove from the page table
             addrSpace->DeallocatePhysicalPages(currentThread->getPid());
 
-            
-            
             // Finish the current thread
             currentThread->Finish();
+
         } else if (type == SC_Join) {
             int childPid = machine->ReadRegister(4);
             int exitCode = 0;
 
             Thread* child = currentThread->getChild(childPid);
 
+            // If the child wasnt under this parent process, return an error
+            if (child == NULL) {
+                exitCode = -1;
+            } else { // Else, keep on checking if the requested process is finished. if not, yield the
+                while (child->getStatus()) {
+
+                }
+            }
+
+            machine->WriteRegister(2, exitCode);
+
         } else if (type == SC_Exec) {
 
         } else if (type == SC_Fork) {
 
         }
+
     } else {
         printf("Unexpected user mode exception %d %d\n", which, type);
         ASSERT(FALSE);
