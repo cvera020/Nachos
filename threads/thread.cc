@@ -32,35 +32,12 @@
 //	"threadName" is an arbitrary string, useful for debugging.
 //----------------------------------------------------------------------
 
-bool Thread::aliveThreads[MAX_NUM_THREADS] = {false};
-int Thread::threadCounter;
-int Thread::numExistingThreads;
-
 Thread::Thread(char* threadName)
 {
     name = threadName;
     stackTop = NULL;
     stack = NULL;
     status = JUST_CREATED;
-
-    ASSERT(numExistingThreads != MAX_NUM_THREADS); //system should not have more than the max # of threads alive
-    
-    //keep track of which pids are in use and assign unused pid to the thread being created   
-    pid = -1;
-    for (int i=0; i < MAX_NUM_THREADS; i++) {
-        if (!aliveThreads[threadCounter]) {
-            pid = threadCounter;
-            threadCounter = (threadCounter+1) % MAX_NUM_THREADS;
-            aliveThreads[pid] = true;
-            break;
-        } else {
-            threadCounter = (threadCounter+1) % MAX_NUM_THREADS;
-        }
-    }
-    ASSERT(pid != -1); //an id for the thread should have been found at this point
-    
-    numExistingThreads++;
-    
 #ifdef USER_PROGRAM
     space = NULL;
 #endif
@@ -85,59 +62,6 @@ Thread::~Thread()
     ASSERT(this != currentThread);
     if (stack != NULL)
 	DeallocBoundedArray((char *) stack, StackSize * sizeof(int));
-    aliveThreads[pid] = false;
-    numExistingThreads--;
-}
-
-//----------------------------------------------------------------------
-// Thread::getPid
-// 	Return the pid of the thread
-//----------------------------------------------------------------------
-
-int
-Thread::getPid() {
-    return pid;
-}
-
-//----------------------------------------------------------------------
-// Thread::getNumChildren
-// 	Returns the number of child threads the current thread has
-//----------------------------------------------------------------------
-
-int
-Thread::getNumChildren() {
-    return numChildren;
-}
-
-//----------------------------------------------------------------------
-// Thread::getParent
-// 	Returns a pointer to the parent thread of the current thread
-//----------------------------------------------------------------------
-
-Thread*
-Thread::getParent() {
-    return parentThread;
-}
-
-//----------------------------------------------------------------------
-// Thread::getChildren
-// 	Returns an array of pointers (please treat it as such) to 
-//      children threads of this thread
-//----------------------------------------------------------------------
-
-Thread** 
-Thread::getChildren() {
-    return childrenThreads;
-}
-
-//----------------------------------------------------------------------
-// Thread::getStatus
-// 	Returns the ThreadStatus (status) of the current thread
-//----------------------------------------------------------------------
-
-ThreadStatus 
-Thread::getStatus() {
-    return status;
 }
 
 //----------------------------------------------------------------------

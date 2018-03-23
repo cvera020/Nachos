@@ -1,5 +1,5 @@
-A. Nachos was simple to install. Download the .gz file. Ssh and ftp into ocelot using Putty and Filezilla, resp. In ssh, from Ocelot, ssh into the nachos machine. Transfer .gz file into ocelot and follow the online instructions.
+a) At first, I thought we were supposed to SCP into nachos.cs.fiu.edu, so I was wondering why it didn't work. So I tried to install nachOS from a JCCL machine (ocelot), and was getting an "unrecognized command line option "-fwritable-strings"" error. I then realized that I was supposed to run the "ssh nachos.cs.fiu.edu" when in ocelot to get it to work. After that, It ran smoothly.
 
-B. The tests ran successfully. The -s option invoked a debugger that ran the program step-by-step, showing the machine's registers and their values for each step which may be a good tool to have, especially later in the class.
+b) Tests worked as expected. The single-step test was a bit confusing at first, but then I realized I needed to hit enter to continue. It looks like it is used to debug.
 
-C. Threads is a class that contains routines to manage threads. The supported operations are fork, finish, yield, and sleep.
+c) Threads Class is used to manage threaded routines. There are four main operations for the thread class: fork (creates a concurrent process with the caller), finish (cleans up a fork), yield (relinquishes control to CPU), and sleep (relinquishes control to CPU, but blocks the thread). 

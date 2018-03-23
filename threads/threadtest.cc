@@ -11,13 +11,6 @@
 
 #include "copyright.h"
 #include "system.h"
-#include "synch.h"
-
-//Uncomment below to enable semaphore synchronization for SimpleThread(int))
-//#define HW1_SEMAPHORES
-
-//Uncomment below to enable locks synchronization for SimpleThread(int))
-#define HW1_LOCKS
 
 // testnum is set in main.cc
 int testnum = 1;
@@ -31,74 +24,15 @@ int testnum = 1;
 //	purposes.
 //----------------------------------------------------------------------
 
-int SharedVariable;
-Semaphore* s;
-Semaphore* barrier;
-
-Lock* lock;
-
-void SimpleThread(int which) {
-
-#ifdef HW1_SEMAPHORES
-    if (s == 0 && which == 0) {
-        s = new Semaphore("testSemaphore", 0);
-        barrier = new Semaphore("testBarrier", 0);
-    } else if (which == 0) {
-        barrier->P();
-    } else {
-        s->P();
-    }
-#endif
-
-#ifdef HW1_LOCKS
-    if (lock == 0 && which == 0) {
-        lock = new Lock("testLock");
-    }
-    lock->Acquire();
-#endif
-
-    int num, val;
-    for (num = 0; num < 5; num++) {
-        val = SharedVariable;
-        printf("*** thread %d sees value %d\n", which, val);
-
-#ifdef HW1_LOCKS
-        lock->Release();
-#endif
-        
-        currentThread->Yield();
-        
-#ifdef HW1_LOCKS
-        lock->Acquire();
-#endif
-        
-        SharedVariable = val + 1;
-        
-#ifdef HW1_LOCKS
-        lock->Release();
-#endif
-        currentThread->Yield();
-    }
-    val = SharedVariable;
-    printf("Thread %d sees final value %d\n", which, val);
-
-#ifdef HW1_SEMAPHORES
-    if (which == 0) {
-        s->V();
-        barrier->P();
-    } else {
-        barrier->V();
-        s->P();
-    }
-    delete s;
-    s = 0;
-    delete barrier;
-    barrier = 0;
-#endif
-
-#ifdef HW1_LOCKS
+void
+SimpleThread(int which)
+{
+    int num;
     
-#endif
+    for (num = 0; num < 5; num++) {
+	printf("*** thread %d looped %d times\n", which, num);
+        currentThread->Yield();
+    }
 }
 
 //----------------------------------------------------------------------
@@ -108,7 +42,8 @@ void SimpleThread(int which) {
 //----------------------------------------------------------------------
 
 void
-ThreadTest1() {
+ThreadTest1()
+{
     DEBUG('t', "Entering ThreadTest1");
 
     Thread *t = new Thread("forked thread");
@@ -123,22 +58,15 @@ ThreadTest1() {
 //----------------------------------------------------------------------
 
 void
-ThreadTest(int n) {
-    if (n == 0) {
-        return;
-    }
-
+ThreadTest()
+{
     switch (testnum) {
-        case 1:
-            ThreadTest1();
-            break;
-        default:
-            printf("No test specified.\n");
-            break;
-    }
-
-    if (n > 0) {
-        ThreadTest(--n);
+    case 1:
+	ThreadTest1();
+	break;
+    default:
+	printf("No test specified.\n");
+	break;
     }
 }
 

@@ -68,8 +68,7 @@ THREAD_S = ../threads/switch.s
 THREAD_O =main.o list.o scheduler.o synch.o synchlist.o system.o thread.o \
 	utility.o threadtest.o interrupt.o stats.o sysdep.o timer.o
 
-USERPROG_H = ../userprog/memorymanager.h\
-	../userprog/addrspace.h\
+USERPROG_H = ../userprog/addrspace.h\
 	../userprog/bitmap.h\
 	../filesys/filesys.h\
 	../filesys/openfile.h\
@@ -78,8 +77,7 @@ USERPROG_H = ../userprog/memorymanager.h\
 	../machine/mipssim.h\
 	../machine/translate.h
 
-USERPROG_C = ../userprog/memorymanager.cc\
-	../userprog/addrspace.cc\
+USERPROG_C = ../userprog/addrspace.cc\
 	../userprog/bitmap.cc\
 	../userprog/exception.cc\
 	../userprog/progtest.cc\
@@ -88,7 +86,7 @@ USERPROG_C = ../userprog/memorymanager.cc\
 	../machine/mipssim.cc\
 	../machine/translate.cc
 
-USERPROG_O = machine.o memorymanager.o addrspace.o bitmap.o exception.o progtest.o console.o \
+USERPROG_O = addrspace.o bitmap.o exception.o progtest.o console.o machine.o \
 	mipssim.o translate.o
 
 VM_H = 
