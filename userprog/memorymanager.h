@@ -13,6 +13,9 @@ class MemoryManager {
                 //a parent process's pid will be stored here
     TranslationEntry* entries;   //Array of page entry pointers
     int numPagesMapped;             //Number of pages (TranslationEntry elements)
+    int numCodePages;
+    int numDataPages;
+    int numBssPages;
     
     MemoryManager();
     ~MemoryManager();

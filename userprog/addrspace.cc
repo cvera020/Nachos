@@ -60,18 +60,21 @@ SwapHeader (NoffHeader *noffH)
 //              the memory manager
 //----------------------------------------------------------------------
 
-TranslationEntry*
-AddrSpace::AllocatePhysicalPages(int amountReq, int pid) {
+void
+AddrSpace::AllocatePhysicalPages(TranslationEntry* en, int amountReq, int numCodePages, 
+        int numDataPages, int numBssPages, int pid) {
+    DEBUG('D', "Starting to allocate physical pages!\n");
+    
+    //check that the TranslationEntry pointer, en, is not null
+    ASSERT(en != NULL);
+    
     //check if there are enough unused physical pages
     ASSERT(totalPhysicalPagesUsed + amountReq <= NumPhysPages);
     
     //currently only support 1-1 mapping from pages to frames
     ASSERT (MaxVirtPages == NumPhysPages);
     
-    TranslationEntry* en = new TranslationEntry[amountReq];
-    
     //create virtual to physical page mappings
-    int virtPageIndex = 0;
     int numContiguousOpen = 0;
     for (int i=0; i < NumPhysPages - amountReq; i++) {
         //check the number of pages that are contiguous from the ith page
@@ -87,18 +90,23 @@ AddrSpace::AllocatePhysicalPages(int amountReq, int pid) {
         }
         
         if (numContiguousOpen == amountReq) {
-            isPhysicalPageInUse[i] = true;
-            en[virtPageIndex].virtualPage = virtPageIndex;
-            en[virtPageIndex].physicalPage = i;
-            en[virtPageIndex].valid = TRUE;
-            en[virtPageIndex].use = FALSE;
-            en[virtPageIndex].dirty = FALSE;
-            en[virtPageIndex].readOnly = FALSE;
+            int virtPageIndex = 0;
+            for (int j=i; j < numContiguousOpen + i; j++) {
+                isPhysicalPageInUse[j] = true;
+                en[virtPageIndex].virtualPage = virtPageIndex;
+                en[virtPageIndex].physicalPage = j;
+                en[virtPageIndex].valid = TRUE;
+                en[virtPageIndex].use = FALSE;
+                en[virtPageIndex].dirty = FALSE;
+                en[virtPageIndex].readOnly = FALSE;
+                virtPageIndex++;
+            }
             
             //zero out the newly allocated physical memory
-            machine->WriteMem(i, PageSize, 0);
+            DEBUG('D', "About to zero out physical page %d..\n", i);
+            bzero((machine->mainMemory+i*PageSize), PageSize*amountReq);
+            DEBUG('D', "Done zeroing out physical page %d..\n", i);
             
-            virtPageIndex++;
             break;
         } else {
             i += numContiguousOpen - 1;
@@ -106,18 +114,29 @@ AddrSpace::AllocatePhysicalPages(int amountReq, int pid) {
         }
     }
     
+    ASSERT(numContiguousOpen == amountReq);
+    
     //add mapping to memory manager array
+    int memManPageAllocated = -1;
     for (int i=0; i < MaxVirtPages; i++) {
-        if (&(memMan[i]) == NULL) {
+        if (memMan[i] == NULL) {
+            memManPageAllocated = i;
             memMan[i] = new MemoryManager();
             memMan[i]->entries = en;
             memMan[i]->pid = pid;
             memMan[i]->numPagesMapped = amountReq;
+            memMan[i]->numCodePages = numCodePages;
+            memMan[i]->numDataPages = numDataPages;
+            memMan[i]->numBssPages = numBssPages;
+            
+            DEBUG('R', "Loaded Program: %d code | %d data | %d bss\n", 
+                    numCodePages, numDataPages, numBssPages);
+            break;
         }
     }
+    ASSERT(memManPageAllocated != -1);
     
     totalPhysicalPagesUsed += amountReq;
-    return en;
 }
 
 //----------------------------------------------------------------------
@@ -127,6 +146,7 @@ AddrSpace::AllocatePhysicalPages(int amountReq, int pid) {
 
 bool
 AddrSpace::DeallocatePhysicalPages(TranslationEntry* en, int pid) {
+    DEBUG('D', "Deallocate all physical pages!\n");
     for (int i=0; i < NumPhysPages; i++) {
         if (memMan[i] != NULL && memMan[i]->entries == en && 
                 memMan[i]->pid == pid) {
@@ -138,7 +158,7 @@ AddrSpace::DeallocatePhysicalPages(TranslationEntry* en, int pid) {
             return true;
         }
     }
-    
+    delete [] memMan;
     return false;
 }
 
@@ -175,7 +195,7 @@ AddrSpace::AddrSpace(OpenFile *executable)
 {
     NoffHeader noffH;
     unsigned int size;
-
+    
     executable->ReadAt((char *)&noffH, sizeof(noffH), 0);
     if ((noffH.noffMagic != NOFFMAGIC) && 
 		(WordToHost(noffH.noffMagic) == NOFFMAGIC))
@@ -183,18 +203,19 @@ AddrSpace::AddrSpace(OpenFile *executable)
     ASSERT(noffH.noffMagic == NOFFMAGIC);
 
 // how big is address space?
-    size = noffH.code.size + noffH.initData.size + noffH.uninitData.size 
-			+ UserStackSize;	// we need to increase the size
-						// to leave room for the stack
-    numPages = divRoundUp(size, PageSize);
-    size = numPages * PageSize;
+    int numCodePages = divRoundUp(noffH.code.size, PageSize);
+    int numDataPages = divRoundUp(noffH.initData.size, PageSize);
+    int numBssPages = divRoundUp(noffH.uninitData.size, PageSize);
+    numPages = numCodePages+numDataPages+numBssPages;
+    size = numPages*PageSize;
 
     DEBUG('D', "Initializing address space, num pages %d, size %d\n", 
 					numPages, size);
     
 // first, set up the translation; physical pages will be initially zeroed out
-    pageTable = AllocatePhysicalPages(numPages, currentThread->getPid());
-
+    pageTable = new TranslationEntry[numPages];
+    AllocatePhysicalPages(pageTable, numPages, numCodePages, numDataPages, numBssPages, currentThread->getPid());
+    
 // then, copy in the code and data segments into memory
     int physicalAddress;
     if (noffH.code.size > 0) {
@@ -221,6 +242,7 @@ AddrSpace::AddrSpace(OpenFile *executable)
 
 AddrSpace::~AddrSpace()
 {
+    DEBUG('D', "Deallocating all pages\n");
     DeallocatePhysicalPages(pageTable, currentThread->getPid());
 }
 
