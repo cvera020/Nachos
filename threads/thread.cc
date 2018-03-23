@@ -120,14 +120,41 @@ Thread::getParent() {
 }
 
 //----------------------------------------------------------------------
+// Thread::removeParent
+// 	Sets the pointer to the parent thread to null.
+//----------------------------------------------------------------------
+
+void
+Thread::removeParent() {
+    parentThread = NULL;
+}
+
+//----------------------------------------------------------------------
 // Thread::getChildren
 // 	Returns an array of pointers (please treat it as such) to 
 //      children threads of this thread
 //----------------------------------------------------------------------
 
-Thread** 
+List*
 Thread::getChildren() {
     return childrenThreads;
+}
+
+//----------------------------------------------------------------------
+// Thread::addChild
+// 	Adds the pointer to a child thread to the list, returning true
+//  if successful.
+//----------------------------------------------------------------------
+
+bool
+Thread::addChild(Thread *child) {
+    if (child != NULL) {
+        childrenThreads->Append(child);
+        child->parentThread = this;
+        numChildren++;
+        return true;
+    }
+    return false;
 }
 
 //----------------------------------------------------------------------

@@ -39,6 +39,7 @@
 
 #include "copyright.h"
 #include "utility.h"
+#include "list.h"
 
 #ifdef USER_PROGRAM
 #include "machine.h"
@@ -97,7 +98,8 @@ class Thread {
     int getPid();                               // Get thread id
     int getNumChildren();                       // Get number of child threads
     Thread* getParent();                        // Return pointer to parent thread
-    Thread** getChildren();                     // Return array of pointers to children
+    void removeParent();                        // Sets the parent thread to null
+    List* getChildren();                        // Return array of pointers to children
                                                 // threds. Use with getNumChildren()
     bool addChild(Thread* child);               // Returns true if child thread was
                                                 // successfully created
@@ -125,8 +127,8 @@ class Thread {
     char* name;
     int pid;                            //thread id
     
-    Thread* parentThread;               //parent thread id
-    Thread** childrenThreads;           //childrens' threads' ids   
+    Thread* parentThread;               // parent thread
+    List*   childrenThreads;            // childrens' threads
     int numChildren;                    //number of children. Used to keep track
                                         //of number of elements in childrenThreads
     
