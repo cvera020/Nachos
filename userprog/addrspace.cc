@@ -61,7 +61,8 @@ SwapHeader (NoffHeader *noffH)
 //----------------------------------------------------------------------
 
 void
-AddrSpace::AllocatePhysicalPages(TranslationEntry* en, int amountReq, int pid) {
+AddrSpace::AllocatePhysicalPages(TranslationEntry* en, int amountReq, int numCodePages, 
+        int numDataPages, int numBssPages, int pid) {
     DEBUG('D', "Starting to allocate physical pages!\n");
     
     //check that the TranslationEntry pointer, en, is not null
@@ -116,14 +117,23 @@ AddrSpace::AllocatePhysicalPages(TranslationEntry* en, int amountReq, int pid) {
     ASSERT(numContiguousOpen == amountReq);
     
     //add mapping to memory manager array
+    int memManPageAllocated = -1;
     for (int i=0; i < MaxVirtPages; i++) {
         if (&(memMan[i]) == NULL) {
+            memManPageAllocated = i;
             memMan[i] = new MemoryManager();
             memMan[i]->entries = en;
             memMan[i]->pid = pid;
             memMan[i]->numPagesMapped = amountReq;
+            memMan[i]->numCodePages = numCodePages;
+            memMan[i]->numDataPages = numDataPages;
+            memMan[i]->numBssPages = numBssPages;
+            
+            DEBUG('R', "Loaded Program: %d code | %d data | %d bss\n", 
+                    numCodePages, numDataPages, numBssPages);
         }
     }
+    ASSERT(memManPageAllocated != -1);
     
     totalPhysicalPagesUsed += amountReq;
 }
@@ -192,18 +202,18 @@ AddrSpace::AddrSpace(OpenFile *executable)
     ASSERT(noffH.noffMagic == NOFFMAGIC);
 
 // how big is address space?
-    size = noffH.code.size + noffH.initData.size + noffH.uninitData.size 
-			+ UserStackSize;	// we need to increase the size
-						// to leave room for the stack
-    numPages = divRoundUp(size, PageSize);
-    size = numPages * PageSize;
+    int numCodePages = divRoundUp(noffH.code.size, PageSize);
+    int numDataPages = divRoundUp(noffH.initData.size, PageSize);
+    int numBssPages = divRoundUp(noffH.uninitData.size, PageSize);
+    numPages = numCodePages+numDataPages+numBssPages;
+    size = numPages*PageSize;
 
     DEBUG('D', "Initializing address space, num pages %d, size %d\n", 
 					numPages, size);
     
 // first, set up the translation; physical pages will be initially zeroed out
     pageTable = new TranslationEntry[numPages];
-    AllocatePhysicalPages(pageTable, numPages, currentThread->getPid());
+    AllocatePhysicalPages(pageTable, numPages, numCodePages, numDataPages, numBssPages, currentThread->getPid());
     
 // then, copy in the code and data segments into memory
     int physicalAddress;
