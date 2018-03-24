@@ -20,7 +20,6 @@ int main()
 	
 	global_cnt++;
 
-	Yield();
 	Fork(sum);
 	Yield();
 

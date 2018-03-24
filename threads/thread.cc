@@ -41,6 +41,7 @@ int Thread::numExistingThreads;
 Thread::Thread(char* threadName)
 {
     name = threadName;
+    childrenThreads = new List();
     stackTop = NULL;
     stack = NULL;
     status = JUST_CREATED;
@@ -177,13 +178,8 @@ Thread::addChild(Thread *child) {
 
 Thread*
 Thread::getChild(int pid) {
-    int i = 0;
     Thread* child;
-    while ((child = (Thread*) childrenThreads->Get(i)) != NULL) {
-        if (child->getPid() == pid)
-            return child;
-    }
-    return NULL;
+    return threadMap[pid];
 }
 
 //----------------------------------------------------------------------

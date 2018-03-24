@@ -17,4 +17,5 @@ main()
 {
     Yield();
     Exit(0);
+    Fork(0);
 }

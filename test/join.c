@@ -21,17 +21,17 @@ int main()
 	SpaceId pid1,pid2,pid3;
 	
 	global_cnt++;
-//	pid1 = Fork(fast_exit);
+	pid1 = Fork(fast_exit);
 	
 	Yield();
 
 	global_cnt++;
-//	pid2 = Fork(sum);
+	pid2 = Fork(sum);
 
 	Yield();
 	
 	global_cnt++;
-//	pid3 = Fork(sum);
+	pid3 = Fork(sum);
 
 	Yield();
 	

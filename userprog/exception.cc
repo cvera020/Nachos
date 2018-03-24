@@ -29,7 +29,7 @@
 #include "thread.h"
 #include "addrspace.h"
 
-static void ThreadFuncForUserProg(int arg);
+static void ThreadFunc(int sctype);
 
 //----------------------------------------------------------------------
 // ExceptionHandler
@@ -64,18 +64,18 @@ ExceptionHandler(ExceptionType which) {
 
         if (type == SC_Halt) {
             DEBUG('a', "Shutdown, initiated by user program.\n");
-            DEBUG('R', "System Call: [%d] invoked Halt\n", currentThread->getPid());
+            DEBUG('R', "System Call: [%d] invoked Halt.\n", currentThread->getPid());
             interrupt->Halt();
         } else if (type == SC_Yield) {
-            DEBUG('R', "System Call: [%d] invoked Yield\n", currentThread->getPid());
+            DEBUG('R', "System Call: [%d] invoked Yield.\n", currentThread->getPid());
             currentThread->setStatus(READY);
             currentThread->Yield();
         } else if (type == SC_Exit) {
             int exitCode = machine->ReadRegister(4);
             currentThread->setStatus(static_cast<ThreadStatus>(exitCode));
             
-            DEBUG('R', "System Call: [%d] invoked Exit\n", currentThread->getPid());
-            DEBUG('R', "Process %d exits with %d\n", currentThread->getPid(), exitCode);
+            DEBUG('R', "System Call: [%d] invoked Exit.\n", currentThread->getPid());
+            DEBUG('R', "Process [%d] exits with [%d]\n", currentThread->getPid(), exitCode);
             
             // Set children's parent pointers to null
             List* children = currentThread->getChildren();
@@ -84,6 +84,12 @@ ExceptionHandler(ExceptionType which) {
                 child = (Thread*) children->Remove();
                 DEBUG('D', "Exit Code: %d now does not have a parent\n", child->getPid());
                 child->removeParent();
+            }
+
+            // Make sure parent isnt blocked
+            if (currentThread->getParent()->getStatus() == BLOCKED)
+            {
+                scheduler->ReadyToRun(currentThread->getParent());
             }
 
             // Remove itself from parent thread, if one exists, and set parent's status to child's
@@ -106,13 +112,17 @@ ExceptionHandler(ExceptionType which) {
             currentThread->Finish();
 
         } else if (type == SC_Join) {
+            DEBUG('R', "System Call: [%d] invoked Join.\n", currentThread->getPid());
             int childPid = machine->ReadRegister(4);
             int exitCode = 0;
 
+            DEBUG('D', "Join: Child pid is %d\n", childPid);
             Thread* child = currentThread->getChild(childPid);
+            DEBUG('D', "tried to get child\n");
 
             // If the child wasnt under this parent process, return an error
             if (child == NULL) {
+                DEBUG('D', "No child found for pid %d\n");
                 exitCode = -1;
             } else {
                 DEBUG('D', "Join: Waiting for child %d to finish\n", child->getPid());
@@ -133,33 +143,32 @@ ExceptionHandler(ExceptionType which) {
 
         } else if (type == SC_Fork) {
 
-            DEBUG('R', "System Call: [%d] invoked Fork\n", currentThread->getPid());
+            DEBUG('R', "System Call: [%d] invoked Fork.\n", currentThread->getPid());
 
-    /*        // PC register value
-            int userFunc = machine->ReadRegister(4);
+            // PC register value
+            int func = machine->ReadRegister(4);
 
             Thread* newThread = new Thread("child");
             currentThread->addChild(newThread);
             newThread->space = new AddrSpace(*currentThread->space);
+   //         DEBUG('R', "Process [%d] Fork: start at address [%d] with [%d] pages memory", currentThread->getPid(), exitCode);
 
             // Save the user's state
             newThread->SaveUserState();
 
-            // Modify PC/SP register of new thread
-            newThread->SetUserRegisterState(4,0);
-            newThread->SetUserRegisterState(PCReg, userFunc);
-            newThread->SetUserRegisterState(NextPCReg, userFunc + 4);
+            // Set the registers for the new thread
+     //       newThread->SetUserRegisterState(4,0);
+            newThread->SetUserRegisterState(PCReg, func);
+            newThread->SetUserRegisterState(NextPCReg, func + 4);
 
-            DEBUG('D', "Fork from thread %d -> thread %d\n", currentThread->getPid(), newThread->getPid());
-            newThread->Fork(ThreadFuncForUserProg, 0);
+            DEBUG('D', "Fork: Forked from thread %d to %d\n", currentThread->getPid(), newThread->getPid());
+            newThread->Fork(ThreadFunc, type);
+
+            DEBUG('D', "Fork: pid after restore = %d\n", newThread->getPid());
             machine->WriteRegister(2, newThread->getPid());
-            currentThread->Yield();
-
-*/
         }
 
-	if (type == SC_Yield || type == SC_Exit || type == SC_Join ||
-                type == SC_Exec || type == SC_Fork) {
+	if (type == SC_Yield || type == SC_Join || type == SC_Exec || type == SC_Fork) {
             machine->WriteRegister(PrevPCReg, machine->ReadRegister(PCReg));
             machine->WriteRegister(PCReg, machine->ReadRegister(NextPCReg));
             machine->WriteRegister(NextPCReg, machine->ReadRegister(NextPCReg) + 4); //Add 4 bytes since this is instruction length
@@ -171,32 +180,15 @@ ExceptionHandler(ExceptionType which) {
     }
 }
 
-// A dummy handler function of user program's Fork/Exec. The main purpose of this
-
-// function is to run virtual machine in nachos(machine->Run()). Before do that,
-
-// Fork need to restore virtual machine's registers and Exec need to init virtual
-
-// machine's registers and pageTable.
-
-static void ThreadFuncForUserProg(int arg)
+static void ThreadFunc(int sctype)
 {
-    switch (arg)
-    {
-        case 0: // Fork
-            // Fork just restore registers.
+    if (sctype == SC_Fork)
             currentThread->RestoreUserState();
-            break;
-        case 1: // Exec
-            if (currentThread->space != NULL)
-            {
-                // Exec should initialize registers and restore address space.
+    else if (sctype == SC_Exec) {
+            if (currentThread->space != NULL) {
                 currentThread->space->InitRegisters();
                 currentThread->space->RestoreState();
             }
-            break;
-        default:
-            break;
     }
     machine->Run();
 }
