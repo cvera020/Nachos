@@ -86,12 +86,6 @@ ExceptionHandler(ExceptionType which) {
                 child->removeParent();
             }
 
-            // Make sure parent isnt blocked
-            if (currentThread->getParent()->getStatus() == BLOCKED)
-            {
-                scheduler->ReadyToRun(currentThread->getParent());
-            }
-
             // Remove itself from parent thread, if one exists, and set parent's status to child's
             Thread* parent = currentThread->getParent();
             if (parent != NULL) {
@@ -108,6 +102,7 @@ ExceptionHandler(ExceptionType which) {
             // Deallocate the process memory and remove from the page table
             addrSpace->DeallocatePhysicalPages(currentThread->getPid());
 
+            DEBUG('D', "Exit: about to call finish()\n");
             // Finish the current thread
             currentThread->Finish();
 
@@ -168,7 +163,7 @@ ExceptionHandler(ExceptionType which) {
             machine->WriteRegister(2, newThread->getPid());
         }
 
-	if (type == SC_Yield || type == SC_Join || type == SC_Exec || type == SC_Fork) {
+	    if (type == SC_Yield || type == SC_Join || type == SC_Exec || type == SC_Fork) {
             machine->WriteRegister(PrevPCReg, machine->ReadRegister(PCReg));
             machine->WriteRegister(PCReg, machine->ReadRegister(NextPCReg));
             machine->WriteRegister(NextPCReg, machine->ReadRegister(NextPCReg) + 4); //Add 4 bytes since this is instruction length
