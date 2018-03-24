@@ -32,6 +32,7 @@ StartProcess(char *filename)
 	return;
     }
     space = new AddrSpace(executable);    
+    DEBUG('D', "Allocated Address Space!n");
     currentThread->space = space;
 
     delete executable;			// close file
