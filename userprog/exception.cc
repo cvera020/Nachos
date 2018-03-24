@@ -89,7 +89,7 @@ ExceptionHandler(ExceptionType which) {
             // Remove itself from parent thread, if one exists, and set parent's status to child's
             Thread* parent = currentThread->getParent();
             if (parent != NULL) {
-                parent->setStatus(currentThread->getStatus());
+             //   parent->setStatus(currentThread->getStatus());
                 if (!parent->getChildren()->RemoveItem(currentThread)) {
                     DEBUG('D', "Error with RemoveItem() call\n");
                 }
@@ -116,7 +116,7 @@ ExceptionHandler(ExceptionType which) {
             DEBUG('D', "tried to get child\n");
 
             // If the child wasnt under this parent process, return an error
-            if (child == NULL) {
+            if (child == NULL || childPid == currentThread->getPid()) {
                 DEBUG('D', "No child found for pid %d\n");
                 exitCode = -1;
             } else {
@@ -161,6 +161,22 @@ ExceptionHandler(ExceptionType which) {
 
             DEBUG('D', "Fork: pid after restore = %d\n", newThread->getPid());
             machine->WriteRegister(2, newThread->getPid());
+        } else if (type == SC_Kill){
+            DEBUG('R', "System Call: [%d] invoked Kill.\n", currentThread->getPid());
+            int threadPid = machine->ReadRegister(4);
+            int exitCode = 0;
+
+            // Gets the thread associated with the pid
+            Thread* thread = currentThread->getChild(threadPid);
+
+            if (thread != NULL) {
+                ExceptionHandler(SC_Exit);
+                machine->WriteRegister(2, 0);
+                break;
+            } else {
+                machine->WriteRegister(2, -1);
+            }
+
         }
 
 	    if (type == SC_Yield || type == SC_Join || type == SC_Exec || type == SC_Fork) {
