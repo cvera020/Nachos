@@ -182,6 +182,10 @@ class Machine {
     TranslationEntry *pageTable;
     unsigned int pageTableSize;
 
+	//FIFO Algorithm Declarations
+	void FIFO(int errPage);
+	unsigned int numOfPages;
+
   private:
     bool singleStep;		// drop back into the debugger after each
 				// simulated instruction

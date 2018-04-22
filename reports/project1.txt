@@ -1,0 +1,4 @@
+Forking for a variable number of threads: we receive n blocks of alternations between the parent thread and a child thread forked from the parent, where n is argument of ThreadTest. In Fig.1, the output is “3” so we receive 3 “sections” (S1, S2, S3 in Fig.1) of thread outputs. We also see that the variable SharedVariable is shared properly between the threads, otherwise the value would increase each time (“thread x sees value y” is printed). If SharedVariable were a shared, then the final between sections would increment by 10, and not by 5.
+
+Exercises 2,3,4 incomplete
+ 

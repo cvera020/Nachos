@@ -1,0 +1,5 @@
+A. Nachos was simple to install. Download the .gz file. Ssh and ftp into ocelot using Putty and Filezilla, resp. In ssh, from Ocelot, ssh into the nachos machine. Transfer .gz file into ocelot and follow the online instructions.
+
+B. The tests ran successfully. The -s option invoked a debugger that ran the program step-by-step, showing the machine's registers and their values for each step which may be a good tool to have, especially later in the class.
+
+C. Threads is a class that contains routines to manage threads. The supported operations are fork, finish, yield, and sleep.

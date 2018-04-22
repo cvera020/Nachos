@@ -70,7 +70,7 @@ Machine::Machine(bool debug)
     tlb = NULL;
     pageTable = NULL;
 #endif
-
+	numOfPages = 0;
     singleStep = debug;
     CheckEndian();
 }
@@ -212,3 +212,30 @@ void Machine::WriteRegister(int num, int value)
 	registers[num] = value;
     }
 
+//FIFO Algorithm for handling page errors
+void Machine::FIFO(int pageErr) {
+	int *vict = 0;
+	int physical, logical;
+
+	if (pageTableSize < NumPhysPages) {
+		logical = pageErr * PageSize;
+		physical = pageTableSize * PageSize;
+		pageTable[pageErr].physicalPage = pageTableSize;
+		pageTableSize++;
+	}
+	else {
+		vict =(int*) pageErr;
+		physical = pageTable[*vict].physicalPage*PageSize;
+		logical = pageTable[*vict].virtualPage*PageSize;
+		if (pageTable[*vict].use) {
+			stats->numDiskWrites++;
+		}
+		logical = pageErr * PageSize;
+		pageTable[*vict].valid = false;
+		pageTable[pageErr].physicalPage = pageTable[*vict].physicalPage;
+	}
+	stats->numPageFaults++;
+	stats->numDiskReads++;
+	pageTable[pageErr].valid = true;
+	vict = new int(pageErr);
+}
