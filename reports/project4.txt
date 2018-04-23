@@ -1,0 +1,18 @@
+Project 4 - Virtual Memory
+
+Carlos Vera
+Tobechukwu Ezewike
+Eddie Caraballo
+
+
+	Project 4 had us implement Virtual Memory in our Nachos OS. As mentioned in the tips that we were given,
+the files that we had to edit for this project were addrspace.h and addrspace.cc, machine.h and machine.cc, 
+translation.h and translation.cc, exception.h and exception.cc.
+	machine.cc is where we included a FIFO algorithm to handle any page fault exceptions, and this function
+gets called always from exception.cc (where all the sys call handlers are).
+
+	We were not able to get the entire implementation working due to time constraint, so it does not fully 
+work as intended. However we believe that our logic was going in the right direction. 
+	A general gist of how we believed the process should go was:
+	Open Program->Memory allocation->Go into virtual memory->if pagefault->machine.cc FIFO->handle
+		memory error.
