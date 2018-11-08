@@ -162,7 +162,7 @@ ExceptionHandler(ExceptionType which) {
             DEBUG('D', "Fork: pid after restore = %d\n", newThread->getPid());
             machine->WriteRegister(2, newThread->getPid());
         } else if (type == SC_Kill){
-            DEBUG('R', "System Call: [%d] invoked Kill.\n", currentThread->getPid());
+            DEBUG('D', "System Call: [%d] invoked Kill.\n", currentThread->getPid());
             int threadPid = machine->ReadRegister(4);
             int exitCode = 0;
 
@@ -170,9 +170,9 @@ ExceptionHandler(ExceptionType which) {
             Thread* thread = currentThread->getChild(threadPid);
 
             if (thread != NULL) {
-                ExceptionHandler(SC_Exit);
+                ExceptionHandler((ExceptionType)SC_Exit);
                 machine->WriteRegister(2, 0);
-                break;
+                return;
             } else {
                 machine->WriteRegister(2, -1);
             }
