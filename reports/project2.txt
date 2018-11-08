@@ -1,0 +1,6 @@
+Team Members
+Carlos Vera
+Ronyo Corneille
+Jan Bonet
+
+The system calls for Fork, Yield, and Halt are working well. The other calls are either not implemented completely or not working correctly. We used a memory manager and PCB data to instate new processes/threads in memory

@@ -39,11 +39,13 @@
 
 #include "copyright.h"
 #include "utility.h"
+#include "list.h"
 
 #ifdef USER_PROGRAM
 #include "machine.h"
 #include "addrspace.h"
 #endif
+
 
 // CPU register state to be saved on context switch.  
 // The SPARC and MIPS only need 10 registers, but the Snake needs 18.
@@ -55,9 +57,11 @@
 // WATCH OUT IF THIS ISN'T BIG ENOUGH!!!!!
 #define StackSize	(4 * 1024)	// in words
 
+// Set arbitrary upper limit for number of threads
+#define MAX_NUM_THREADS 200
 
 // Thread state
-enum ThreadStatus { JUST_CREATED, RUNNING, READY, BLOCKED };
+enum ThreadStatus { JUST_CREATED, RUNNING, READY, BLOCKED, ZOMBIE };
 
 // external function, dummy routine whose sole job is to call Thread::Print
 extern void ThreadPrint(int arg);	 
@@ -79,8 +83,13 @@ class Thread {
     // THEY MUST be in this position for SWITCH to work.
     int* stackTop;			 // the current stack pointer
     int machineState[MachineStateSize];  // all registers except for stackTop
-
+    
   public:
+    static bool aliveThreads[]; //keep track of which thread ids are in use
+    static int threadCounter;
+    static int numExistingThreads;
+    static Thread* threadMap[];
+    
     Thread(char* debugName);		// initialize a Thread 
     ~Thread(); 				// deallocate a Thread
 					// NOTE -- thread being deleted
@@ -88,6 +97,20 @@ class Thread {
 					// is called
 
     // basic thread operations
+    int getPid();                               // Get thread id
+    int getNumChildren();                       // Get number of child threads
+    Thread* getParent();                        // Return pointer to parent thread
+    void removeParent();                        // Sets the parent thread to null
+    List* getChildren();                        // Return array of pointers to children
+                                                // threds. Use with getNumChildren()
+    bool addChild(Thread* child);               // Returns true if child thread was
+                                                // successfully created
+    Thread* getChild(int pid);                  // Returns the child with the specified pid,
+                                                // and NULL if not found
+    Thread* getThread(int pid);                 // Gets the thread with the specified pid
+    ThreadStatus getStatus();                   // Get status of current thread
+
+    void printThread();                         // Prints information about the current thread
 
     void Fork(VoidFunctionPtr func, int arg); 	// Make thread run (*func)(arg)
     void Yield();  				// Relinquish the CPU if any 
@@ -110,7 +133,13 @@ class Thread {
 					// (If NULL, don't deallocate stack)
     ThreadStatus status;		// ready, running or blocked
     char* name;
-
+    int pid;                            //thread id
+    
+    Thread* parentThread;               // parent thread
+    List*   childrenThreads;            // childrens' threads
+    int numChildren;                    //number of children. Used to keep track
+                                        //of number of elements in childrenThreads
+    
     void StackAllocate(VoidFunctionPtr func, int arg);
     					// Allocate a stack for thread.
 					// Used internally by Fork()
@@ -125,6 +154,7 @@ class Thread {
   public:
     void SaveUserState();		// save user-level register state
     void RestoreUserState();		// restore user-level register state
+    void SetUserRegisterState(int id, int value); // sets a user-level register's state
 
     AddrSpace *space;			// User code this thread is running.
 #endif

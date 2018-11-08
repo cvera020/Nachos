@@ -19,6 +19,7 @@
 #include "switch.h"
 #include "synch.h"
 #include "system.h"
+#include "list.h"
 
 #define STACK_FENCEPOST 0xdeadbeef	// this is put at the top of the
 					// execution stack, for detecting 
@@ -32,12 +33,43 @@
 //	"threadName" is an arbitrary string, useful for debugging.
 //----------------------------------------------------------------------
 
+bool Thread::aliveThreads[MAX_NUM_THREADS] = {false};
+Thread* Thread::threadMap[MAX_NUM_THREADS];
+int Thread::threadCounter;
+int Thread::numExistingThreads;
+
 Thread::Thread(char* threadName)
 {
     name = threadName;
+    childrenThreads = new List();
     stackTop = NULL;
     stack = NULL;
     status = JUST_CREATED;
+
+    ASSERT(numExistingThreads != MAX_NUM_THREADS); //system should not have more than the max # of threads alive
+    
+    //keep track of which pids are in use and assign unused pid to the thread being created   
+    pid = -1;
+    for (int i=0; i < MAX_NUM_THREADS; i++) {
+        if (!aliveThreads[threadCounter]) {
+            pid = threadCounter;
+            threadCounter = (threadCounter+1) % MAX_NUM_THREADS;
+            aliveThreads[pid] = true;
+            threadMap[pid] = this;
+
+            #ifdef USER_PROGRAM
+ //           space = NULL;
+            #endif
+
+            break;
+        } else {
+            threadCounter = (threadCounter+1) % MAX_NUM_THREADS;
+        }
+    }
+    ASSERT(pid != -1); //an id for the thread should have been found at this point
+    
+    numExistingThreads++;
+    
 #ifdef USER_PROGRAM
     space = NULL;
 #endif
@@ -62,6 +94,124 @@ Thread::~Thread()
     ASSERT(this != currentThread);
     if (stack != NULL)
 	DeallocBoundedArray((char *) stack, StackSize * sizeof(int));
+    aliveThreads[pid] = false;
+    numExistingThreads--;
+}
+
+//----------------------------------------------------------------------
+// Thread::getPid
+// 	Return the pid of the thread
+//----------------------------------------------------------------------
+
+int
+Thread::getPid() {
+    return pid;
+}
+
+//----------------------------------------------------------------------
+// Thread::getNumChildren
+// 	Returns the number of child threads the current thread has
+//----------------------------------------------------------------------
+
+int
+Thread::getNumChildren() {
+    return numChildren;
+}
+
+//----------------------------------------------------------------------
+// Thread::getParent
+// 	Returns a pointer to the parent thread of the current thread
+//----------------------------------------------------------------------
+
+Thread*
+Thread::getParent() {
+    return parentThread;
+}
+
+//----------------------------------------------------------------------
+// Thread::removeParent
+// 	Sets the pointer to the parent thread to null.
+//----------------------------------------------------------------------
+
+void
+Thread::removeParent() {
+    if (parentThread != NULL) {
+        parentThread->numChildren--;
+        parentThread = NULL;
+    }
+
+}
+
+//----------------------------------------------------------------------
+// Thread::getChildren
+// 	Returns an array of pointers (please treat it as such) to 
+//      children threads of this thread
+//----------------------------------------------------------------------
+
+List*
+Thread::getChildren() {
+    return childrenThreads;
+}
+
+//----------------------------------------------------------------------
+// Thread::addChild
+// 	Adds the pointer to a child thread to the list, returning true
+//  if successful.
+//----------------------------------------------------------------------
+
+bool
+Thread::addChild(Thread *child) {
+    if (child != NULL) {
+        childrenThreads->Append(child);
+        child->parentThread = this;
+        numChildren++;
+        return true;
+    }
+    return false;
+}
+
+//----------------------------------------------------------------------
+// Thread::getChild
+// 	Gets the pointer to a child thread with the specified pid on the
+//  list, returning NULL if none was found.
+//----------------------------------------------------------------------
+
+Thread*
+Thread::getChild(int pid) {
+    Thread* child;
+    return threadMap[pid];
+}
+
+//----------------------------------------------------------------------
+// Thread::getThread
+// 	Gets the pointer a thread with the specified pid on the main thread
+//  list, returning NULL if none was found.
+//----------------------------------------------------------------------
+
+Thread*
+Thread::getThread(int pid) {
+    return threadMap[pid];
+}
+
+//----------------------------------------------------------------------
+// Thread::getStatus
+// 	Returns the ThreadStatus (status) of the current thread
+//----------------------------------------------------------------------
+
+ThreadStatus
+Thread::getStatus() {
+    return status;
+}
+
+//----------------------------------------------------------------------
+// Thread::printThread
+// 	Prints the information of the current thread
+//----------------------------------------------------------------------
+
+void
+Thread::printThread() {
+    printf("%6s | %15s | %6s | %6s", "PID", "Name", "Status", "Alive?");
+    printf("%6d | %15s | %6d | %6d", getPid(), getName(), getStatus(), aliveThreads[getPid()]);
 }
 
 //----------------------------------------------------------------------
@@ -147,7 +297,9 @@ Thread::Finish ()
     ASSERT(this == currentThread);
     
     DEBUG('t', "Finishing thread \"%s\"\n", getName());
-    
+
+    status = ZOMBIE;
+
     threadToBeDestroyed = currentThread;
     Sleep();					// invokes SWITCH
     // not reached
@@ -317,4 +469,20 @@ Thread::RestoreUserState()
     for (int i = 0; i < NumTotalRegs; i++)
 	machine->WriteRegister(i, userRegisters[i]);
 }
+
+//----------------------------------------------------------------------
+// Thread::SetUserRegisterState
+//	Sets a user-level register's state.
+//
+//	"id" is the user-level register's name.
+//	"value" is the value to set in the register.
+//----------------------------------------------------------------------
+
+void
+Thread::SetUserRegisterState(int id, int value)
+{
+	if (id >= 0 && id < NumTotalRegs)
+		userRegisters[id] = value;
+}
+
 #endif

@@ -25,12 +25,14 @@ StartProcess(char *filename)
 {
     OpenFile *executable = fileSystem->Open(filename);
     AddrSpace *space;
+    space->InitMemoryManager();
 
     if (executable == NULL) {
 	printf("Unable to open file %s\n", filename);
 	return;
     }
     space = new AddrSpace(executable);    
+    DEBUG('D', "Allocated Address Space!n");
     currentThread->space = space;
 
     delete executable;			// close file
@@ -39,6 +41,7 @@ StartProcess(char *filename)
     space->RestoreState();		// load page table register
 
     machine->Run();			// jump to the user progam
+    delete space;
     ASSERT(FALSE);			// machine->Run never returns;
 					// the address space exits
 					// by doing the syscall "exit"

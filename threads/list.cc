@@ -128,6 +128,60 @@ List::Remove()
 }
 
 //----------------------------------------------------------------------
+// List::Remove
+//      Remove the specified item from the list.
+//
+// Returns:
+//	Pointer to removed item, NULL if not found on the list.
+//----------------------------------------------------------------------
+void *
+List::RemoveItem(void* item)
+{
+    ListElement *parentElement = first;
+    ListElement *element = first->next;
+
+    if (IsEmpty())
+        return NULL;
+    if (item == parentElement->item)
+        return Remove();
+
+    while (element != NULL) {
+        if (element->item == item) {
+            parentElement->next = element->next;
+            delete element;
+            return item;
+        }
+        parentElement = element;
+        element = element->next;
+    }
+    return NULL;
+}
+
+//----------------------------------------------------------------------
+// List::Get
+//      Gets the "item" at the specified.
+//
+// Returns:
+//	Pointer to item at index, NULL if nothing was there.
+//----------------------------------------------------------------------
+
+void *
+List::Get(int index)
+{
+    int i = 0;
+    ListElement *element = first;
+    for (i = 0; i <= index; i++) {
+        if (element->item == NULL) {
+            return NULL;
+        } else if (i == index) {
+            return element->item;
+        }
+        element = element->next;
+    }
+    return NULL;
+}
+
+//----------------------------------------------------------------------
 // List::Mapcar
 //	Apply a function to each item on the list, by walking through  
 //	the list, one element at a time.
