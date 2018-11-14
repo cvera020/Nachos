@@ -100,7 +100,7 @@ ExceptionHandler(ExceptionType which) {
             }
 
             // Deallocate the process memory and remove from the page table
-            addrSpace->DeallocatePhysicalPages(currentThread->getPid());
+            //addrSpace->DeallocatePhysicalPages(currentThread->getPid());
 
             DEBUG('D', "Exit: about to call finish()\n");
             // Finish the current thread

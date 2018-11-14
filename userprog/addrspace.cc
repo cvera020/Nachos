@@ -187,20 +187,6 @@ void AddrSpace::RestoreState()
 
 void AddrSpace:: getString(char * str, int virtAd)
 {
-    int i=0;
-    int physAd = myTranslate(virtAd);
-    bcopy(&(machine->mainMemory[physAd]),&str[i],1);
-    
-    while(str[i] != '\0' && i != 256-1)
-    {
-	virtAd++;
-	i++;
-    	physAd = myTranslate(virtAd);
-        bcopy(&(machine->mainMemory[physAd]),&str[i],1);
-    }
-
-    if(i != 256-1 && str[i] != '\0')
-    {
-	str[i] = '\0';
-    }
+    return;
 }
+
