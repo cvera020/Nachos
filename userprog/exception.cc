@@ -28,6 +28,8 @@
 #include "machine.h"
 #include "thread.h"
 #include "addrspace.h"
+#include "pcb.h"
+#include "pcbManager.h"
 
 static void ThreadFunc(int sctype);
 
@@ -55,6 +57,18 @@ static void ThreadFunc(int sctype);
 //----------------------------------------------------------------------
 extern Machine* machine;
 extern AddrSpace* addrSpace;
+
+void
+readString(char *dest, int addr)
+{
+	int offset = 0, phyAddr;
+
+	do {
+		machine->Translate(addr + offset, &phyAddr, 1, FALSE);
+		bcopy(machine->mainMemory + phyAddr, dest + offset, 1);
+	} while (dest[offset++] != 0);
+	dest[offset] = '\0';
+}
 
 void
 ExceptionHandler(ExceptionType which) {
@@ -177,9 +191,19 @@ ExceptionHandler(ExceptionType which) {
                 machine->WriteRegister(2, -1);
             }
 
-        }
+        } else if (type == SC_Open){
+				DEBUG('a', "Open System Call.\n");
+				char fileName[32];
+				
+				readString(fileName, machine->ReadRegister(4));
+				
+				
+				DEBUG('D', "Done reading path");
+				int fileId = 0;//pcbMan->Open(file);
+				ASSERT(fileId != -1);
+		}
 
-	    if (type == SC_Yield || type == SC_Join || type == SC_Exec || type == SC_Fork) {
+	    if (type == SC_Yield || type == SC_Join || type == SC_Exec || type == SC_Fork || type == SC_Open) {
             machine->WriteRegister(PrevPCReg, machine->ReadRegister(PCReg));
             machine->WriteRegister(PCReg, machine->ReadRegister(NextPCReg));
             machine->WriteRegister(NextPCReg, machine->ReadRegister(NextPCReg) + 4); //Add 4 bytes since this is instruction length
