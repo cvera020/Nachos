@@ -57,6 +57,18 @@ extern Machine* machine;
 extern AddrSpace* addrSpace;
 
 void
+readString(char *dest, int addr)
+{
+	int offset = 0, phyAddr;
+
+	do {
+		machine->Translate(addr + offset, &phyAddr, 1, FALSE);
+		bcopy(machine->mainMemory + phyAddr, dest + offset, 1);
+	} while (dest[offset++] != 0);
+	dest[offset] = '\0';
+}
+
+void
 ExceptionHandler(ExceptionType which) {
     int type = machine->ReadRegister(2);
     
@@ -177,9 +189,19 @@ ExceptionHandler(ExceptionType which) {
                 machine->WriteRegister(2, -1);
             }
 
-        }
+        } else if (type == SC_Open){
+            DEBUG('D', "System Call: [%d] invoked Open.\n", currentThread->getPid());
+			printf("System Call: [%d] invoked Open\n", currentThread->getPid());
+			
+			char fileName[32];
+			
+            readString(fileName, machine->ReadRegister(4));
+			
+			printf("The name of the file to be opened is: [%s].\n", fileName);
+		}
 
-	    if (type == SC_Yield || type == SC_Join || type == SC_Exec || type == SC_Fork) {
+
+	    if (type == SC_Yield || type == SC_Join || type == SC_Exec || type == SC_Fork || SC_Open) {
             machine->WriteRegister(PrevPCReg, machine->ReadRegister(PCReg));
             machine->WriteRegister(PCReg, machine->ReadRegister(NextPCReg));
             machine->WriteRegister(NextPCReg, machine->ReadRegister(NextPCReg) + 4); //Add 4 bytes since this is instruction length
