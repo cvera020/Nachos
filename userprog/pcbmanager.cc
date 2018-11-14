@@ -89,3 +89,18 @@ pcb* pcbManager:: getThisPCB(int pcbID)
     }
     return NULL;
 }
+
+UserOpenFile* pcbManager:: getUOFs(char* fileName) {
+    for (int i=0; i < MAX_PCB; i++) {
+        if (pcbArray[i] != NULL && pcbArray[i]->getID() == currPid) {
+            UserOpenFile* files = pcbArray[i]->userOpenFiles; //get the UOFs of the current process's PCB
+            //find fileName in current process's open files
+            for (int j=0; j < MAX_USER_OPEN_FILES; j++) {
+                if (&files[j] != NULL && strcmp(files[j].fileName, fileName)) {
+                    return &files[j];
+                }
+            }
+        }
+    }
+    return NULL;
+}

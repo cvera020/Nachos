@@ -14,6 +14,7 @@ class AddrSpace;
 #include "pcbManager.h"
 class pcbManager;
 
+#define MAX_USER_OPEN_FILES 30
 
 class pcb {
     public:
@@ -34,10 +35,8 @@ class pcb {
 	void setParentsNull();
 	Thread* returnThread();
 
-	
+	UserOpenFile* userOpenFiles; //public so that it can be accessed by PCBManager
     private:
-	int MAX_FILES;
-	
 	Thread *processThread;
 	AddrSpace *AdSpace;
 	int processID;

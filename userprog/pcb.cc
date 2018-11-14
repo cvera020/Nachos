@@ -5,14 +5,11 @@ pcb::pcb(Thread *input)
 {
     int i;
     
-   processID = pid_manager->getPid();
+    processID = pid_manager->getPid();
     parent_process = NULL;
     processThread = input;
     children = new pcbManager();
     childExitValue=0;
-    MAX_FILES = 21;
-
-
 }
 
 pcb:: ~pcb()

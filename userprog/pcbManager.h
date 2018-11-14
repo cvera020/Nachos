@@ -1,8 +1,11 @@
 #ifndef PCBMANAGER_H
 #define PCBMANAGER_H
 
+#include "../filesys/useropenfile.h"
 #include "pcb.h"
 class pcb;
+
+#define MAX_PCB 20
 
 class pcbManager
 {
@@ -15,10 +18,11 @@ class pcbManager
 	bool validPID(int pid); 
 	void setParentNull();
 	pcb* getThisPCB(int pcbID);
-
+        UserOpenFile* getUOFs(char* fileName);
+        
     private:
-    	pcb *pcbArray[32];
-	bool usage[32];
+    	pcb *pcbArray[MAX_PCB];
+	bool usage[MAX_PCB];
 	int pcb_count;
     int currPid;
 };
