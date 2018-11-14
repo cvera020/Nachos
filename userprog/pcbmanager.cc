@@ -174,3 +174,7 @@ OpenFileId pcbManager::Open(char* fileName) {
 	sysFile = 0;
     return -1;
 }
+
+OpenFileId pcbManager::Read(char* fileName) {
+    
+}

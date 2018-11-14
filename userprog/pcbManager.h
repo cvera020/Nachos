@@ -20,6 +20,7 @@ class pcbManager
 	pcb* getThisPCB(int pcbID);
         UserOpenFile* getUOFs(char* fileName);
         OpenFileId Open(char* fileName);
+        OpenFileId Read(char* fileName);
     private:
     	pcb *pcbArray[MAX_PCB];
 	bool usage[MAX_PCB];
