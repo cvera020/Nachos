@@ -19,7 +19,7 @@ class pcbManager
 	void setParentNull();
 	pcb* getThisPCB(int pcbID);
         UserOpenFile* getUOFs(char* fileName);
-        
+        OpenFileId Open(char* fileName);
     private:
     	pcb *pcbArray[MAX_PCB];
 	bool usage[MAX_PCB];

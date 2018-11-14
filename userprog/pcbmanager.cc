@@ -104,3 +104,73 @@ UserOpenFile* pcbManager:: getUOFs(char* fileName) {
     }
     return NULL;
 }
+
+OpenFileId pcbManager::Open(char* fileName) {
+	int i=0;
+	int j=0;
+	int sysFileFreeIndex = -1;
+    OpenFile* file = fileSystem->Open(fileName);
+    
+	//If the file could not be opened and was not previously opened
+    if (file == NULL) {
+        return NULL;
+    }
+    
+	//Get the open system file, if it exists
+    SysOpenFile* sysFile = NULL;
+	while (i++ < MAX_SYS_OPEN_FILES) {
+        if ( &(sysOpenFiles[i]) != NULL && strcmp(sysOpenFiles[i].fileName, fileName) ) {
+            sysFile = &(sysOpenFiles[i]);
+			break;
+        }
+    }
+	
+	//if the open system file does not exist, create and allocate it in the sysOpenFiles array, if possible
+	if (sysFile == NULL) {
+		i=0;
+		while (i++ < MAX_SYS_OPEN_FILES) {
+            if (&(sysOpenFiles[i]) == NULL) {
+                sysFileFreeIndex = i;
+                break;
+            }
+        }
+        
+		//If there is no more room left for opening system files...
+        if (sysFileFreeIndex == -1) {
+            return -1;
+        }
+        
+		//otherwise, if there is room, allocate
+        sysFile = new SysOpenFile();
+		sysFile->openFile = file;
+        sysFile->fileId = sysFileFreeIndex;
+        sysFile->fileName = fileName;
+        sysFile->numUserProcesses = 1;
+	} else {
+		sysFile->numProcessesAccessing++;
+	}
+	
+    
+    //add the new file to the process's user file array
+	i=0;
+    for (i++ < MAX_PCB) {
+        if (pcbArray[i] != NULL && pcbArray[i]->getID() == currPid) {
+            UserOpenFile* uofs = pcbArray[i]->userOpenFiles;
+			j=0;
+            for (j++ < MAX_USER_OPEN_FILES) {
+                if (&(uofs[j]) == NULL) {
+                    UserOpenFile* userFile = new UserOpenFile();
+                    userFile->fileName = fileName;
+                    userFile->fileOffset = 0;
+                    userFile->sysOpenFileIndex = sysFile->fileId;
+                    return sysFile->fileId;
+                }
+            }
+        }
+    }
+    
+    //at this point, since the user file could not be allocated in the process's user file array, remove the system open file
+    delete sysFile;
+	sysFile = 0;
+    return -1;
+}
